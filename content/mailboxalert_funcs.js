@@ -337,6 +337,14 @@ MailboxAlert.replace = function (string, oldstr, newstr) {
 /* split-join method for replaceAll() */
 /* also escape spaces */
 MailboxAlert.replaceEscape = function (already_quoted, string, oldstr, newstr) {
+    // The newstr passed here can itself have been partially quoted,
+    // so if there are unquoted quotes in newstr, we need to replace them,
+    // without double-escaping escaped quotes
+    let windows_quote_quote = true;
+    if (windows_quote_quote) {
+        newstr = MailboxAlert.replace(newstr, '"', '""');
+    }
+
     var escaped_new = "";
     if (newstr) {
         escaped_new = newstr;
@@ -605,7 +613,7 @@ MailboxAlert.executeCommand = function (alert_data, command, escape_html) {
             var stringsBundle = Services.strings.createBundle("chrome://mailboxalert/locale/mailboxalert.properties");
             alert(stringsBundle.GetStringFromName('mailboxalert.error')+"\n" + exec.leafName + " " + stringsBundle.GetStringFromName('mailboxalert.error.notfound') + "\n\nFull path: "+executable_name+"\n");
             MailboxAlertUtil.logMessage(1, "Failed command:  " +executable_name + "\r\n");
-            MailboxAlertUtil.logMessage(1, "Arguments: " + args + "\r\n");
+            MailboxAlertUtil.logMessage(1, "Arguments: [ " + args.join(", ") + " ]\r\n");
             var caller = window.arguments[0];
             if (caller) {
                 var executecommandcheckbox = document.getElementById('mailboxalert_execute_command');
@@ -617,9 +625,10 @@ MailboxAlert.executeCommand = function (alert_data, command, escape_html) {
             }
         } else {
             MailboxAlertUtil.logMessage(1, "Command:  " +executable_name + "\r\n");
-            MailboxAlertUtil.logMessage(1, "Arguments: " + args + "\r\n");
+            MailboxAlertUtil.logMessage(1, "Arguments: [ " + args.join(", ") + " ]\r\n");
             var res1 = pr.init(exec);
             var result = pr.run(false, args, args.length);
+            MailboxAlertUtil.logMessage(1, "Command result: " +  result + "\r\n");
         }
     } catch (e) {
         if (e.name == "NS_ERROR_FAILURE" ||
